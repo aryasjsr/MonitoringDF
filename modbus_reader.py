@@ -1,5 +1,3 @@
-# raspi/modbus_reader.py
-
 import os
 import time
 import requests
