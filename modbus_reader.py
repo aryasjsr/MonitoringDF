@@ -100,8 +100,7 @@ if __name__ == "__main__":
     print(" Modbus Reader Multi-Threaded Dimulai ")
     print(f"Target IP: {MODBUS_IP}:{MODBUS_PORT}")
     print(f"API Endpoint: {API_URL}")
-    print("---------------------------------------------")
-
+ 
     # Membuat dan memulai thread pembaca sebagai daemon thread
     # Daemon thread akan otomatis berhenti jika program utama berhenti
     reader = threading.Thread(target=modbus_reader_thread, daemon=True)
