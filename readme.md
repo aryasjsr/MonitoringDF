@@ -1,9 +1,9 @@
 # Proyek Monitoring Mesin DF (Modbus ke Web)
 
-├── raspi/
-│   ├── modbus_reader.py      # Skrip untuk Modbus TCP/IP
-│   ├── modbus_reader_rtu.py  # Skrip untuk Modbus RTU
-│   └── requirements.txt
+raspi/
+├── modbus_reader.py      # Skrip untuk Modbus TCP/IP
+├── modbus_reader_rtu.py  # Skrip untuk Modbus RTU
+└── requirements.txt
 
 ### Setup Raspberry Pi
 
