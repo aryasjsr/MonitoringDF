@@ -1,4 +1,4 @@
-# Proyek Monitoring Mesin Industri (Modbus ke Web)
+# Proyek Monitoring Mesin DF (Modbus ke Web)
 
 ├── raspi/
 │   ├── modbus_reader.py      # Skrip untuk Modbus TCP/IP
