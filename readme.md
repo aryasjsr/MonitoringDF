@@ -120,6 +120,12 @@ python modbusRtu_reader.py
 | **Parameter .env** | `MODBUS_IP`, `MODBUS_PORT`        | `SERIAL_PORT`, `BAUDRATE`, dll.   |
 | **Logika Kerja**   | Identik (Multi-thread, Real-time) | Identik (Multi-thread, Real-time) |
 
-
+## Data yang diambil dari HMI
+* **Temperature**
+* **Seam eye right**: 
+* **Seam eye left**:
+* **Level**:  
+* **button_on/machine_on**: 
+* **status error**:  
 ---
 
