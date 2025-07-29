@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 # Muat variabel dari file .env
 load_dotenv()
 
-# --- Konfigurasi dari .env untuk Modbus RTU ---
+#Konfigurasi dari .env untuk Modbus RTU 
 # Parameter koneksi serial
 SERIAL_PORT = os.getenv('SERIAL_PORT') 
 BAUDRATE = int(os.getenv('BAUDRATE', 9600))
@@ -26,7 +26,6 @@ REGISTER_BTN = int(os.getenv('REGISTER_BTN'))
 BIT_POS_BTN = int(os.getenv('BIT_POS_BTN'))
 READ_INTERVAL_SECONDS = 2
 
-# Antrian (Queue) untuk komunikasi antar thread
 data_queue = queue.Queue()
 
 # --- Fungsi untuk Thread Pembaca Modbus RTU (Producer) ---
@@ -73,14 +72,13 @@ def modbus_reader_thread():
         except Exception as e:
             print(f"[Reader RTU] Koneksi atau pembacaan Modbus RTU gagal: {e}")
         finally:
-            # Tidak perlu close() di setiap loop untuk serial, cukup jaga koneksi
+            
             time.sleep(READ_INTERVAL_SECONDS)
     
     # Tutup koneksi saat thread selesai (meskipun dalam kasus ini tidak akan pernah tercapai)
     client.close()
 
-# --- Fungsi untuk Thread Pengirim API (Consumer) ---
-# FUNGSI INI TIDAK PERLU DIUBAH SAMA SEKALI
+#  Fungsi untuk Thread Pengirim API 
 def api_sender_thread():
     """
     Thread ini mengambil data dari data_queue dan mengirimkannya ke API.
@@ -123,7 +121,7 @@ if __name__ == "__main__":
     sender = threading.Thread(target=api_sender_thread, daemon=True)
     sender.start()
 
-    # Jaga agar program utama tetap berjalan
+    # program utama tetap berjalan
     try:
         while True:
             time.sleep(1)
