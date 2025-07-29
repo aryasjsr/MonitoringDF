@@ -22,20 +22,18 @@ REGISTER_BTN = int(os.getenv('REGISTER_BTN'))
 BIT_POS_BTN = int(os.getenv('BIT_POS_BTN'))
 READ_INTERVAL_SECONDS = 2 # Interval pembacaan data
 
-#  Antrian (Queue) untuk Komunikasi antar Thread 
-# Queue ini aman digunakan oleh banyak thread (thread-safe)
-data_queue = queue.Queue()
+latest_data = None
+# Lock ini memastikan hanya satu thread yang bisa mengakses latest_data pada satu waktu.
+data_lock = threading.Lock()
 
 #  Fungsi untuk Thread Pembaca Modbus (Producer) 
 def modbus_reader_thread():
-    """
-    Thread ini bertugas membaca data dari Modbus secara periodik
-    dan menaruh hasilnya ke dalam data_queue.
-    """
+   
     print("[Reader] Thread pembaca Modbus dimulai.")
     client = ModbusTcpClient(MODBUS_IP, port=MODBUS_PORT)
     
     while True:
+        global latest_data
         try:
             client.connect()
             
@@ -79,46 +77,60 @@ def modbus_reader_thread():
             register_value = btn_response.registers[0]
             button_status = bool((register_value >> BIT_POS_BTN) & 1)
 
-            # Send data yang berhasil dibaca ke dalam antrian
-            data_to_send = {"temperature": temperature, "seam_left": seam_left, "seam_right": seam_right, "level": level,"set_temp": set_temp, "button_on": button_status}
-            data_queue.put(data_to_send)
-            print(f"[Reader] Data dibaca dan dimasukkan ke antrian: {data_to_send}")
+            # Send data yang berhasil dibaca 
+            data_read = {"temperature": temperature, "seam_left": seam_left, "seam_right": seam_right, "level": level,"set_temp": set_temp, "button_on": button_status,"status": "ok"}
+            with data_lock:
+                latest_data = data_read
+            print(f"[Reader] Data dibaca : {data_read}")
 
         except Exception as e:
             print(f"[Reader] Koneksi atau pembacaan Modbus gagal: {e}")
+            error_payload = {
+                "temperature": 0, # Nilai default
+                "button_on": False, # Nilai default yang aman
+                "status": "error_modbus_connection" # Status error yang jelas
+            }
+            with data_lock:
+                latest_data = error_payload
+            
+            print(f"[Reader] Status error dikirim: {error_payload}")
         finally:
             if client.is_socket_open():
                 client.close()
-            # Tunggu sebelum membaca lagi
+            # Tunggu baca
             time.sleep(READ_INTERVAL_SECONDS)
 
 #  Fungsi untuk Thread Pengirim API (Consumer) 
 def api_sender_thread():
-    """
-    Thread ini bertugas mengambil data dari data_queue (jika ada)
-    dan mengirimkannya ke API.
-    """
+   
     print("[Sender] Thread pengirim API dimulai.")
     while True:
-        try:
-            # Ambil data dari antrian. .get() akan menunggu (block) sampai ada item.
-            payload = data_queue.get()
-            
-            print(f"[Sender] Mengambil data dari antrian, mengirim ke API: {payload}")
-            response = requests.post(API_URL, json=payload, timeout=10)
-            
-            if response.status_code == 200:
-                print(f"[Sender] Sukses kirim data. Status: {response.status_code}")
-            else:
-                print(f"[Sender] Gagal kirim data. Status: {response.status_code}, Response: {response.text}")
+        global latest_data
+        data_to_send = None
 
-            # Memberi tahu antrian bahwa tugas untuk item ini sudah selesai
-            data_queue.task_done()
-
-        except requests.exceptions.RequestException as e:
-            print(f"[Sender] Tidak dapat terhubung ke API: {e}")
-        except Exception as e:
-            print(f"[Sender] Terjadi error tak terduga: {e}")
+        # Mengunci akses sebelum membaca dan menghapus dari variabel bersama
+        with data_lock:
+            if latest_data is not None:
+                # Salin data ke variabel lokal
+                data_to_send = latest_data
+                # Hapus data dari variabel bersama agar tidak dikirim lagi
+                latest_data = None
+        
+        # Jika ada data baru untuk dikirim
+        if data_to_send:
+            try:
+                print(f"[Sender] Mengirim data baru ke API: {data_to_send}")
+                response = requests.post(API_URL, json=data_to_send, timeout=10)
+                if response.status_code == 200:
+                    print(f"[Sender] Sukses kirim data.")
+                else:
+                    print(f"[Sender] Gagal kirim data. Status: {response.status_code}")
+            except requests.exceptions.RequestException as e:
+                # Jika pengiriman gagal, data akan hilang. Ini sesuai permintaan.
+                print(f"[Sender] Tidak dapat terhubung ke API: {e}")
+        
+        # Beri jeda singkat agar loop tidak membebani CPU
+        time.sleep(0.1)
 
 
 if __name__ == "__main__":
@@ -140,5 +152,5 @@ if __name__ == "__main__":
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
-        print("\nProgram dihentikan oleh pengguna.")
+        print("\nProgram dihentikan.")
 
