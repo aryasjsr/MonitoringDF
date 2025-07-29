@@ -20,13 +20,13 @@ REGISTER_LEVEL = int(os.getenv('REGISTER_LEVEL'))
 REGISTER_SET_TEMP = int(os.getenv('REGISTER_SET_TEMP'))
 REGISTER_BTN = int(os.getenv('REGISTER_BTN'))
 BIT_POS_BTN = int(os.getenv('BIT_POS_BTN'))
-READ_INTERVAL_SECONDS = 2 # Interval pembacaan data
+READ_INTERVAL_SECONDS = 2
 
 latest_data = None
 # Lock ini memastikan hanya satu thread yang bisa mengakses latest_data pada satu waktu.
 data_lock = threading.Lock()
 
-#  Fungsi untuk Thread Pembaca Modbus (Producer) 
+#  Fungsi untuk Thread Pembaca Modbus 
 def modbus_reader_thread():
    
     print("[Reader] Thread pembaca Modbus dimulai.")
@@ -86,9 +86,9 @@ def modbus_reader_thread():
         except Exception as e:
             print(f"[Reader] Koneksi atau pembacaan Modbus gagal: {e}")
             error_payload = {
-                "temperature": 0, # Nilai default
-                "button_on": False, # Nilai default yang aman
-                "status": "error_modbus_connection" # Status error yang jelas
+                "temperature": 0,
+                "button_on": False, 
+                "status": "error_modbus_connection" 
             }
             with data_lock:
                 latest_data = error_payload
@@ -100,7 +100,7 @@ def modbus_reader_thread():
             # Tunggu baca
             time.sleep(READ_INTERVAL_SECONDS)
 
-#  Fungsi untuk Thread Pengirim API (Consumer) 
+#  Fungsi untuk Thread Pengirim API 
 def api_sender_thread():
    
     print("[Sender] Thread pengirim API dimulai.")
@@ -108,12 +108,12 @@ def api_sender_thread():
         global latest_data
         data_to_send = None
 
-        # Mengunci akses sebelum membaca dan menghapus dari variabel bersama
+        # Mengunci akses sebelum membaca dan menghapus 
         with data_lock:
             if latest_data is not None:
-                # Salin data ke variabel lokal
+                
                 data_to_send = latest_data
-                # Hapus data dari variabel bersama agar tidak dikirim lagi
+               
                 latest_data = None
         
         # Jika ada data baru untuk dikirim
@@ -126,24 +126,21 @@ def api_sender_thread():
                 else:
                     print(f"[Sender] Gagal kirim data. Status: {response.status_code}")
             except requests.exceptions.RequestException as e:
-                # Jika pengiriman gagal, data akan hilang. Ini sesuai permintaan.
+              
                 print(f"[Sender] Tidak dapat terhubung ke API: {e}")
         
-        # Beri jeda singkat agar loop tidak membebani CPU
         time.sleep(0.1)
 
 
 if __name__ == "__main__":
-    print(" Modbus Reader Multi-Threaded Dimulai ")
+    print(" Modbus Reader  Dimulai ")
     print(f"Target IP: {MODBUS_IP}:{MODBUS_PORT}")
     print(f"API Endpoint: {API_URL}")
  
-    # Membuat dan memulai thread pembaca sebagai daemon thread
-    # Daemon thread akan otomatis berhenti jika program utama berhenti
+   
     reader = threading.Thread(target=modbus_reader_thread, daemon=True)
     reader.start()
 
-    # Membuat dan memulai thread pengirim sebagai daemon thread
     sender = threading.Thread(target=api_sender_thread, daemon=True)
     sender.start()
 
