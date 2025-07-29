@@ -64,8 +64,6 @@ raspi/
     BIT_POS_BTN=
     ```
 
-Berikut adalah versi README yang siap Anda gunakan untuk proyek GitHub Anda:
-
 ---
 
 # 📡 Modbus Master (Raspberry Pi)
