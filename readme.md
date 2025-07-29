@@ -64,74 +64,61 @@ raspi/
     BIT_POS_BTN=
     ```
 
- Komponen Pengumpul Data (Raspberry Pi)
-Bagian ini bertanggung jawab untuk berkomunikasi langsung dengan perangkat industri (PLC/HMI) melalui protokol Modbus. Terdapat dua skrip yang disediakan untuk mengakomodasi metode koneksi yang berbeda.
+Berikut adalah versi README yang siap Anda gunakan untuk proyek GitHub Anda:
 
-Arsitektur Skrip
-Kedua skrip dirancang menggunakan arsitektur multi-threading (Producer-Consumer) untuk memastikan keandalan dan efisiensi:
+---
 
-Thread Pembaca (Producer): Fokus utamanya adalah membaca data dari perangkat Modbus secara periodik. Proses ini tidak akan terganggu meskipun koneksi ke backend API lambat atau terputus.
+# 📡 Modbus Master (Raspberry Pi)
 
-Thread Pengirim (Consumer): Fokus utamanya adalah mengirimkan data terbaru yang telah dibaca ke backend API.
+Bagian ini bertanggung jawab untuk berkomunikasi langsung dengan perangkat industri (PLC/HMI) melalui protokol **Modbus**. Terdapat dua skrip utama yang disediakan untuk mengakomodasi metode koneksi yang berbeda: `modbus_reader.py` (untuk Modbus TCP/IP) dan `modbus_reader_rtu.py` (untuk Modbus RTU).
 
-Desain ini memastikan data real-time selalu diprioritaskan dan sistem tetap responsif terhadap kondisi mesin.
+##  Arsitektur Skrip
 
-Skrip yang Tersedia
-1. modbus_reader.py (untuk Modbus TCP/IP)
-Koneksi: Menggunakan jaringan Ethernet (LAN/WiFi) untuk terhubung ke perangkat melalui alamat IP dan Port.
+Kedua skrip dirancang menggunakan arsitektur **multi-threading Producer-Consumer** untuk memastikan keandalan dan efisiensi:
 
-Penggunaan: Cocok untuk perangkat modern yang terhubung ke jaringan lokal.
+* **Thread Pembaca (Producer)**: Membaca data dari perangkat Modbus secara periodik. Proses ini terus berjalan meskipun koneksi ke backend API sedang lambat atau terputus.
+* **Thread Pengirim (Consumer)**: Mengirimkan data terbaru ke backend API.
 
-2. modbus_reader_rtu.py (untuk Modbus RTU)
-Koneksi: Menggunakan koneksi serial (misalnya, melalui converter USB to RS485/RS232).
+Desain ini memastikan bahwa data **real-time tetap diprioritaskan**, dan sistem tetap responsif terhadap kondisi mesin.
 
-Penggunaan: Cocok untuk perangkat yang memerlukan koneksi serial langsung.
+## 📁 Skrip yang Tersedia
 
-Fitur Penanganan Error
-Jika koneksi ke perangkat Modbus terputus, kedua skrip akan secara otomatis mengirimkan payload dengan status error_modbus_connection ke backend. Hal ini memungkinkan dasbor frontend untuk menampilkan status koneksi yang akurat kepada pengguna.
+### 1. `modbus_reader.py` (untuk Modbus TCP/IP)
 
-Konfigurasi dan Menjalankan
-Semua parameter (alamat IP, port, parameter serial, alamat register, dan URL API) diatur di dalam file raspi/.env. Pastikan Anda mengisi file ini sesuai dengan metode koneksi yang Anda gunakan sebelum menjalankan skrip.
+* **Koneksi**: Melalui jaringan Ethernet (LAN/WiFi) menggunakan alamat IP dan port.
+* **Penggunaan**: Cocok untuk perangkat modern yang terhubung ke jaringan lokal.
 
-Menjalankan Skrip:
+### 2. `modbus_reader_rtu.py` (untuk Modbus RTU)
 
-# Pilih skrip yang sesuai dengan koneksi Anda
-# Untuk TCP/IP:
+* **Koneksi**: Melalui koneksi serial, seperti USB to RS485/RS232.
+* **Penggunaan**: Cocok untuk perangkat lama atau yang hanya mendukung koneksi serial langsung.
+
+## ⚠️ Fitur Penanganan Error
+
+Jika koneksi ke perangkat Modbus gagal, skrip akan otomatis mengirimkan payload dengan status `error_modbus_connection` ke backend. Hal ini memungkinkan frontend untuk menampilkan status koneksi yang akurat.
+
+## ⚙️ Konfigurasi & Menjalankan Skrip
+
+Semua parameter seperti alamat IP, port, alamat register, dan URL API diatur melalui file `.env` di dalam folder `raspi/`. Contoh file `.env` sudah disediakan, Anda hanya perlu menyesuaikannya.
+
+### Menjalankan Skrip:
+
+```bash
+# Untuk koneksi Modbus TCP/IP:
 python modbus_reader.py
 
-# Untuk RTU:
+# Untuk koneksi Modbus RTU:
 python modbus_reader_rtu.py
+```
 
-Perbedaan Utama
-Fitur
+## 🔍 Perbedaan Utama
 
-modbus_reader.py (TCP/IP)
-
-modbus_reader_rtu.py (RTU)
-
-Koneksi Fisik
-
-Jaringan Ethernet (LAN/WiFi)
-
-Koneksi Serial (RS485/RS232)
-
-Library Client
-
-ModbusTcpClient
-
-ModbusSerialClient
-
-Parameter .env
-
-MODBUS_IP, MODBUS_PORT
-
-SERIAL_PORT, BAUDRATE, PARITY, dll.
-
-Logika Kerja
-
-Identik (Multi-thread, Real-time)
-
-Identik (Multi-thread, Real-time)
+| Fitur              | `modbus_reader.py` (TCP/IP)       | `modbus_reader_rtu.py` (RTU)      |
+| ------------------ | --------------------------------- | --------------------------------- |
+| **Koneksi Fisik**  | Jaringan Ethernet (LAN/WiFi)      | Koneksi Serial (RS485/RS232)      |
+| **Library Client** | `ModbusTcpClient`                 | `ModbusSerialClient`              |
+| **Parameter .env** | `MODBUS_IP`, `MODBUS_PORT`        | `SERIAL_PORT`, `BAUDRATE`, dll.   |
+| **Logika Kerja**   | Identik (Multi-thread, Real-time) | Identik (Multi-thread, Real-time) |
 
 
 ---
