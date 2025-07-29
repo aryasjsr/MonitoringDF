@@ -70,7 +70,7 @@ Berikut adalah versi README yang siap Anda gunakan untuk proyek GitHub Anda:
 
 # 📡 Modbus Master (Raspberry Pi)
 
-Bagian ini bertanggung jawab untuk berkomunikasi langsung dengan perangkat industri (PLC/HMI) melalui protokol **Modbus**. Terdapat dua skrip utama yang disediakan untuk mengakomodasi metode koneksi yang berbeda: `modbus_reader.py` (untuk Modbus TCP/IP) dan `modbus_reader_rtu.py` (untuk Modbus RTU).
+Bagian ini bertanggung jawab untuk berkomunikasi langsung dengan perangkat industri (PLC/HMI) melalui protokol **Modbus**. Terdapat dua skrip utama yang disediakan untuk mengakomodasi metode koneksi yang berbeda: `modbus_reader.py` (untuk Modbus TCP/IP) dan `modbusRtu_reader.py` (untuk Modbus RTU).
 
 ##  Arsitektur Skrip
 
@@ -88,7 +88,7 @@ Desain ini memastikan bahwa data **real-time tetap diprioritaskan**, dan sistem 
 * **Koneksi**: Melalui jaringan Ethernet (LAN/WiFi) menggunakan alamat IP dan port.
 * **Penggunaan**: Cocok untuk perangkat modern yang terhubung ke jaringan lokal.
 
-### 2. `modbus_reader_rtu.py` (untuk Modbus RTU)
+### 2. `modbusRtu_reader.py` (untuk Modbus RTU)
 
 * **Koneksi**: Melalui koneksi serial, seperti USB to RS485/RS232.
 * **Penggunaan**: Cocok untuk perangkat lama atau yang hanya mendukung koneksi serial langsung.
@@ -108,12 +108,12 @@ Semua parameter seperti alamat IP, port, alamat register, dan URL API diatur mel
 python modbus_reader.py
 
 # Untuk koneksi Modbus RTU:
-python modbus_reader_rtu.py
+python modbusRtu_reader.py
 ```
 
 ## 🔍 Perbedaan Utama
 
-| Fitur              | `modbus_reader.py` (TCP/IP)       | `modbus_reader_rtu.py` (RTU)      |
+| Fitur              | `modbus_reader.py` (TCP/IP)       | `modbusRtu_reader.py` (RTU)      |
 | ------------------ | --------------------------------- | --------------------------------- |
 | **Koneksi Fisik**  | Jaringan Ethernet (LAN/WiFi)      | Koneksi Serial (RS485/RS232)      |
 | **Library Client** | `ModbusTcpClient`                 | `ModbusSerialClient`              |
