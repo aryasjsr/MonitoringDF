@@ -1,11 +1,11 @@
 # Proyek Monitoring Mesin DF (Modbus ke Web)
-    ```bash
+```bash
 raspi/
 ├── modbus_reader.py
 ├── modbusRtu_reader.py
 ├── .env
 └── requirements.txt
-    ```
+```
 
 ### Setup Raspberry Pi
 
