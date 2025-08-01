@@ -91,13 +91,13 @@ def modbus_reader_thread():
 
 
             # Send data yang berhasil dibaca 
-            data_read = {"mc":NO_MC,
-                         "temperature": temperature, 
+            data_read = {"noMc":NO_MC,
+                         "temp": temperature, 
                          "seam": seam, 
                         #  "seam_right": seam_right, 
                          "level": level,
                          "process": process,
-                         "ptrn": ptrn,
+                         "patern": ptrn,
                          "step": step,
                          "machine_on": machine_on,                
                         "status": True}
@@ -107,13 +107,13 @@ def modbus_reader_thread():
 
         except Exception as e:
             print(f"[Reader] Koneksi atau pembacaan Modbus gagal: {e}")
-            error_payload = {"mc":NO_MC,
-                         "temperature": 0.0, 
+            error_payload = {"noMc":NO_MC,
+                         "temp": 0.0, 
                          "seam": 0, 
                         #  "seam_right": seam_right, 
                          "level": 0,
                          "process": 0,
-                         "ptrn": 0,
+                         "patern": 0,
                          "step": 0,
                          "machine_on": 0,                
                         "status": False
