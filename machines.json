@@ -1,0 +1,30 @@
+[
+  {
+    "noMc": 6,
+    "ip_address": "192.168.5.100",
+    "port": 502,
+    "registers": {
+      "temperature": 32772,
+      "seam": 32768,
+      "level": 32791,
+      "process": 32788,
+      "pattern": 32866,
+      "step": 32868,
+      "machine_on": 33792
+    }
+  },
+  {
+    "noMc": 5,
+    "ip_address": "192.168.5.101",
+    "port": 502,
+    "registers": {
+      "temperature": 32772,
+      "seam": 32768,
+      "level": 32791,
+      "process": 32788,
+      "pattern": 32866,
+      "step": 32868,
+      "machine_on": 33792
+    }
+  }
+]
