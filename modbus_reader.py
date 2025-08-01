@@ -2,7 +2,6 @@ import os
 import time
 import requests
 import threading
-import queue
 from pymodbus.client import ModbusTcpClient
 from dotenv import load_dotenv
 
@@ -13,13 +12,16 @@ load_dotenv()
 MODBUS_IP = os.getenv('MODBUS_IP')
 MODBUS_PORT = int(os.getenv('MODBUS_PORT', 502))
 API_URL = os.getenv('API_URL')
+NO_MC = int(os.getenv('NO_MC'))
 REGISTER_TEMP = int(os.getenv('REGISTER_TEMP'))
-REGISTER_SEAM_LEFT = int(os.getenv('REGISTER_SEAM_LEFT'))
-REGISTER_SEAM_RIGHT = int(os.getenv('REGISTER_SEAM_RIGHT'))
+REGISTER_SEAM = int(os.getenv('REGISTER_seam'))
+# REGISTER_SEAM_RIGHT = int(os.getenv('REGISTER_SEAM_RIGHT'))
 REGISTER_LEVEL = int(os.getenv('REGISTER_LEVEL'))
-REGISTER_SET_TEMP = int(os.getenv('REGISTER_SET_TEMP'))
-REGISTER_BTN = int(os.getenv('REGISTER_BTN'))
-BIT_POS_BTN = int(os.getenv('BIT_POS_BTN'))
+REGISTER_PROCESS = int(os.getenv('REGISTER_PROCESS'))
+REGISTER_PTRN = int(os.getenv('REGISTER_PTRN'))
+REGISTER_STEP = int(os.getenv('REGISTER_STEP'))
+REGISTER_ON_MC = int(os.getenv('REGISTER_ON_MC'))
+
 READ_INTERVAL_SECONDS = 2
 
 latest_data = None
@@ -38,57 +40,83 @@ def modbus_reader_thread():
             client.connect()
             
             temp_response = client.read_holding_registers(REGISTER_TEMP, count=1, slave=1)
-            seamL_response = client.read_holding_registers(REGISTER_SEAM_LEFT, count=1, slave=1)
-            seamR_response = client.read_holding_registers(REGISTER_SEAM_RIGHT, count=1, slave=1)
+            seam_response = client.read_holding_registers(REGISTER_SEAM, count=1, slave=1)
+            # seamR_response = client.read_holding_registers(REGISTER_SEAM_RIGHT, count=1, slave=1)
             level_response = client.read_holding_registers(REGISTER_LEVEL, count=1, slave=1)
-            setTemp_response = client.read_holding_registers(REGISTER_SET_TEMP, count=1, slave=1)
+            process_response = client.read_holding_registers(REGISTER_PROCESS, count=1, slave=1)
+            ptrn_response = client.read_holding_registers(REGISTER_PTRN, count=1, slave=1)
+            step_response = client.read_holding_registers(REGISTER_STEP, count=1, slave=1)
+            machine_on_response = client.read_holding_registers(REGISTER_ON_MC, count=10, slave=1)
             
             if temp_response.isError() :
                 print(f"[Reader] Error membaca register suhu : {temp_response}")
                 continue # Coba lagi di iterasi berikutnya
-            
             temperature = temp_response.registers[0] / 10.0
             
-            if seamL_response.isError() :
-                print(f"[Reader] Error membaca register seam kiri: {seamL_response}")
+            if seam_response.isError() :
+                print(f"[Reader] Error membaca register seam kiri: {seam_response}")
                 continue # Coba lagi di iterasi berikutnya
-            seam_left = seamL_response.registers[0] 
+            seam = seam_response.registers[0] 
 
-            if seamR_response.isError() :
-                print(f"[Reader] Error membaca register seam kanan: {seamR_response}")
-                continue # Coba lagi di iterasi berikutnya
-            seam_right = seamR_response.registers[0] 
+            # if seamR_response.isError() :
+            #     print(f"[Reader] Error membaca register seam kanan: {seamR_response}")
+            #     continue # Coba lagi di iterasi berikutnya
+            # seam_right = seamR_response.registers[0] 
 
             if level_response.isError() :
                 print(f"[Reader] Error membaca register level: {level_response}")
                 continue # Coba lagi di iterasi berikutnya
             level = level_response.registers[0] 
 
-            if setTemp_response.isError() :
-                print(f"[Reader] Error membaca register set temperature: {setTemp_response}")
-                continue # Coba lagi di iterasi berikutnya
-            set_temp = setTemp_response.registers[0] / 10.0
-
-            btn_response = client.read_holding_registers(REGISTER_BTN, count=1, slave=1)
-            if btn_response.isError():
-                print(f"[Reader] Error membaca register tombol: {btn_response}")
+            if process_response.isError():
+                print(f"[Reader] Error membaca register tombol: {process_response}")
                 continue
+            process = process_response.registers[0]
 
-            register_value = btn_response.registers[0]
-            button_status = bool((register_value >> BIT_POS_BTN) & 1)
+            if ptrn_response.isError():
+                print(f"[Reader] Error membaca register tombol: {ptrn_response}")
+                continue
+            ptrn = ptrn_response.registers[0]
+
+            if step_response.isError():
+                print(f"[Reader] Error membaca register tombol: {step_response}")
+                continue
+            step = step_response.registers[0]
+
+            if machine_on_response.isError():
+                print(f"[Reader] Error membaca register tombol: {machine_on_response}")
+                continue
+            machine_on = machine_on_response.registers[9]
+
+
 
             # Send data yang berhasil dibaca 
-            data_read = {"temperature": temperature, "seam_left": seam_left, "seam_right": seam_right, "level": level,"set_temp": set_temp, "button_on": button_status,"status": "ok"}
+            data_read = {"mc":NO_MC,
+                         "temperature": temperature, 
+                         "seam": seam, 
+                        #  "seam_right": seam_right, 
+                         "level": level,
+                         "process": process,
+                         "ptrn": ptrn,
+                         "step": step,
+                         "machine_on": machine_on,                
+                        "status": True}
             with data_lock:
                 latest_data = data_read
             print(f"[Reader] Data dibaca : {data_read}")
 
         except Exception as e:
             print(f"[Reader] Koneksi atau pembacaan Modbus gagal: {e}")
-            error_payload = {
-                "temperature": 0,
-                "button_on": False, 
-                "status": "error_modbus_connection" 
+            error_payload = {"mc":NO_MC,
+                         "temperature": 0.0, 
+                         "seam": 0, 
+                        #  "seam_right": seam_right, 
+                         "level": 0,
+                         "process": 0,
+                         "ptrn": 0,
+                         "step": 0,
+                         "machine_on": 0,                
+                        "status": False
             }
             with data_lock:
                 latest_data = error_payload
@@ -111,9 +139,7 @@ def api_sender_thread():
         # Mengunci akses sebelum membaca dan menghapus 
         with data_lock:
             if latest_data is not None:
-                
                 data_to_send = latest_data
-               
                 latest_data = None
         
         # Jika ada data baru untuk dikirim
